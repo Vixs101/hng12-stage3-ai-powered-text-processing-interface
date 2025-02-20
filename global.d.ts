@@ -38,10 +38,39 @@ interface AILanguageDetectorFactory {
   create(options?: object): Promise<AILanguageDetector>;
 }
 
-// For properties you aren't using right now, you can provide minimal types:
 type AILanguageModelFactory = object;
 
-type AISummarizerFactory = object;
+// ===== Summarizer API Types =====
+
+export interface AISummarizerOptions {
+ 
+  sharedContext?: string;
+
+  type?: "key-points" | "tl;dr" | "teaser" | "headline";
+
+  format?: "markdown" | "plain-text";
+
+  length?: "short" | "medium" | "long";
+}
+
+interface AISummarizerCapabilities {
+  available: "no" | "readily" | "after-download";
+}
+
+interface AISummarizer extends EventTarget {
+
+  summarize(text: string, options?: { context?: string }): Promise<string>;
+
+  destroy(): void;
+  
+  ready?: Promise<void>;
+}
+
+interface AISummarizerFactory {
+
+  capabilities(): Promise<AISummarizerCapabilities>;
+  create(options?: AISummarizerOptions): Promise<AISummarizer>;
+}
 
 declare global {
   interface Window {

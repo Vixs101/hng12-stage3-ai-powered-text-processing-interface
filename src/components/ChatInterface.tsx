@@ -15,9 +15,9 @@ interface ChatInterfaceProps {
   onLanguageChange: (language: string) => void;
 }
 
-export default function ChatInterface({ 
-  messages, 
-  onSendMessage, 
+export default function ChatInterface({
+  messages,
+  onSendMessage,
   onSummarize,
   onTranslate,
   selectedLanguage,
@@ -42,18 +42,23 @@ export default function ChatInterface({
 
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-white rounded-lg shadow-md md:min-w-3xl md:max-w-6xl ">
+    <div className="flex-grow flex flex-col overflow-hidden bg-white rounded-lg shadow-md md:min-w-3xl md:max-w-6xl xl:ml-16">
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (
           <div key={index} className="flex flex-col gap-2">
-            <MessageBubble key={index} message={message} onSummarize={() => onSummarize(index)} />
-            <ActionControls 
-              selectedLanguage={selectedLanguage} 
+            <MessageBubble
+              key={index}
+              message={message}
+            />
+            <ActionControls
+              message={message}
+              onSummarize={() => onSummarize(index)}
+              selectedLanguage={selectedLanguage}
               onLanguageChange={onLanguageChange}
               onTranslate={() => {
                 onTranslate(index)
                 console.log('translating', selectedLanguage, message)
-              }} 
+              }}
             />
           </div>
         ))}
