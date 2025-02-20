@@ -7,8 +7,9 @@ export default function ToastWrapper() {
       toastOptions={{
         duration: 5000,
         style: {
-          background: "#363636",
+          background: "#051731",
           color: "#fff",
+          border: "1px solid #7B47FE",
         },
         success: {
           duration: 3000,

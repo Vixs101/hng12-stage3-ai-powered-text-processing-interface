@@ -11,14 +11,12 @@ export default function Home() {
   >([])
   const [selectedLanguage, setSelectedLanguage] = useState("en")
   const toast = useErrorToast()
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSendMessage = async (text: string) => {
-    // Creating a new message object.
     const newMessage = { text, language: null, summary: null, translation: null };
-    // Append the new message to the messages array.
     setMessages(prev => [...prev, newMessage]);
-  
-    // Now detecting the language.
+
     if (
       typeof window !== "undefined" &&
       window.ai &&
@@ -28,7 +26,7 @@ export default function Home() {
       try {
         const detector = await window.ai.languageDetector.create();
         const results = await detector.detect(text);
-  
+
         const bestResponse = results[0];
         setMessages(prevMessages => {
           // Create a copy of the messages.
@@ -41,32 +39,33 @@ export default function Home() {
           };
           return updatedMessages;
         });
-  
+
         detector.destroy();
       } catch (error) {
         console.error("Language detection error", error);
-        toast.showError(`Language detection error ${error}` );
+        toast.showError(`Language detection error ${error}`);
       }
     }
   };
-  
+
   // summarization
   const handleSummarize = async (index: number) => {
+    setIsLoading(true);
     const message = messages[index];
     if (!message) return;
-  
+
     const sourceLanguage = message.language;
     const options: AISummarizerOptions = {
       type: "key-points",
       length: "medium",
       format: "markdown",
     };
-  
+
     if (sourceLanguage !== "en") {
       toast.showError("The message is not in English, summarization is not supported for this language");
       return;
     }
-  
+
     if (
       typeof window !== "undefined" &&
       window.ai &&
@@ -80,10 +79,10 @@ export default function Home() {
           toast.showError("Summarizer API is not available at the moment.");
           return;
         }
-  
+
         // Create the summarizer.
         const summarizer = await window.ai.summarizer.create(options);
-  
+
         if (capabilities.available === "after-download") {
           summarizer.addEventListener("downloadprogress", (e: Event) => {
             const progressEvent = e as ProgressEvent;
@@ -91,29 +90,33 @@ export default function Home() {
           });
           await summarizer.ready;
         }
-  
+
         const summaryText = await summarizer.summarize(message.text);
-  
+
         setMessages(prevMessages => {
           const updated = [...prevMessages];
           updated[index] = { ...updated[index], summary: summaryText };
           return updated;
         });
-  
+
         summarizer.destroy?.();
       } catch (error) {
         console.error("Summarization error", error);
         toast.showError("An error occurred while summarizing the text");
+      } finally {
+        setIsLoading(false);
       }
     } else {
       console.error("Chrome Summarizer API not available");
       toast.showError("Chrome Summarizer API not available");
+      setIsLoading(false);
     }
   };
-  
-  
+
+
 
   const handleTranslate = async (index: number) => {
+    setIsLoading(true);
     const message = messages[index];
     if (!message) return;
 
@@ -121,7 +124,7 @@ export default function Home() {
 
     console.log(window.ai)
 
-    if (!sourceLanguage){
+    if (!sourceLanguage) {
       toast.showError("Unable to detect the source language,please refresh and try again")
     }
 
@@ -129,15 +132,15 @@ export default function Home() {
       toast.showError("The message is already thesame with the selected language");
       return;
     }
-    
-    
+
+
     if (typeof window !== "undefined" && window.ai && window.ai.translator && "create" in window.ai.translator) {
 
       try {
         const translator = await window.ai.translator.create({
           sourceLanguage: "en",
           targetLanguage: selectedLanguage,
-          
+
         });
 
         const translation = await translator.translate(message.text);
@@ -147,18 +150,24 @@ export default function Home() {
         setMessages(updatedMessages);
       } catch (error) {
         console.error("Translation error", error);
+      } finally {
+        setIsLoading(false);
       }
     } else {
       console.error("Chrome Translator API not available");
       toast.showError("Chrome Translator API not available");
+      setIsLoading(false);
     }
-    
+
   };
 
 
   return (
-    <main className="flex flex-col h-screen p-4 md:px-10 lg:px-28 md:py-4 bg-gray-100 justify-center text-black w-full">
-      <h1 className="text-2xl font-bold mb-4 text-center">AI Text Processor</h1>
+    <main className="flex flex-col h-screen p-4 md:px-10 lg:px-28 md:py-4  justify-center text-black w-full space-y-3">
+      <div>
+        <h1 className="text-2xl font-bold mb-4 text-center text-white">AI Text Processor</h1>
+        <p className="text-white text-center">Language detection, translation, and summarization – all in one intelligent tool.</p>
+      </div>
       <div className="flex-grow overflow-hidden flex flex-col justify-center  w-full">
         <ChatInterface
           messages={messages}
@@ -167,6 +176,7 @@ export default function Home() {
           onTranslate={handleTranslate}
           selectedLanguage={selectedLanguage}
           onLanguageChange={setSelectedLanguage}
+          isLoading={isLoading}
         />
       </div>
     </main>

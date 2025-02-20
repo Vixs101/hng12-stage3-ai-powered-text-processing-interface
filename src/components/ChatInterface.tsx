@@ -13,6 +13,7 @@ interface ChatInterfaceProps {
   onTranslate: (index: number) => void;
   selectedLanguage: string;
   onLanguageChange: (language: string) => void;
+  isLoading: boolean;
 }
 
 export default function ChatInterface({
@@ -22,6 +23,7 @@ export default function ChatInterface({
   onTranslate,
   selectedLanguage,
   onLanguageChange,
+  isLoading,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -30,7 +32,7 @@ export default function ChatInterface({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  useEffect(scrollToBottom, [messages]) // Updated dependency array
+  useEffect(scrollToBottom, [messages])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,10 +44,17 @@ export default function ChatInterface({
 
 
   return (
-    <div className="flex-grow flex flex-col overflow-hidden bg-white rounded-lg shadow-md md:min-w-3xl md:max-w-6xl xl:ml-16">
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+    <div className="flex-grow flex flex-col overflow-y-auto gradient backdrop-blur-sm rounded-xl shadow-md md:min-w-3xl md:max-w-6xl xl:ml-16 border-[#7B47FE] border-2 ">
+      <div className="flex-grow overflow-y-auto p-4 space-y-4
+        [&::-webkit-scrollbar]:w-1
+        [&::-webkit-scrollbar-track]:rounded-full
+      [&::-webkit-scrollbar-track]:bg-gray-300
+        [&::-webkit-scrollbar-thumb]:rounded-full
+      [&::-webkit-scrollbar-thumb]:bg-[#7B47FE]
+      dark:[&::-webkit-scrollbar-track]:bg-white
+      dark:[&::-webkit-scrollbar-thumb]:bg-[#7B47FE]">
         {messages.map((message, index) => (
-          <div key={index} className="flex flex-col gap-2">
+          <div key={index} className="flex flex-col gap-4">
             <MessageBubble
               key={index}
               message={message}
@@ -54,6 +63,7 @@ export default function ChatInterface({
               message={message}
               onSummarize={() => onSummarize(index)}
               selectedLanguage={selectedLanguage}
+              isLoading={isLoading}
               onLanguageChange={onLanguageChange}
               onTranslate={() => {
                 onTranslate(index)
@@ -64,23 +74,28 @@ export default function ChatInterface({
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-white/10">
         <div className="flex items-center">
+          <label htmlFor="messageInput" className="sr-only">
+            Message
+          </label>
           <textarea
+            id="messageInput"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            className="flex-grow p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-10 resize-none"
+            aria-label="Type your message"
+            className="flex-grow p-2 bg-[#051731] text-white placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7B47FE] h-10 resize-none overflow-hidden mr-2"
             rows={1}
           />
           <button
             type="submit"
-            className="bg-blue-500 text-white p-2 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-white hover:bg-[#7B47FE]/30 focus:outline-none focus:ring-2 focus:ring-[#7B47FE] rounded-md p-2 transition-colors bg-[#7B47FE]"
             aria-label="Send message"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
+              className="h-6 w-6 rotate-90"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
