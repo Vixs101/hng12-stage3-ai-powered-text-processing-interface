@@ -53,26 +53,35 @@ export default function ChatInterface({
       [&::-webkit-scrollbar-thumb]:bg-[#7B47FE]
       dark:[&::-webkit-scrollbar-track]:bg-white
       dark:[&::-webkit-scrollbar-thumb]:bg-[#7B47FE]">
-        {messages.map((message, index) => (
-          <div key={index} className="flex flex-col gap-4">
-            <MessageBubble
-              key={index}
-              message={message}
-            />
-            <ActionControls
-              message={message}
-              onSummarize={() => onSummarize(index)}
-              selectedLanguage={selectedLanguage}
-              isLoading={isLoading}
-              onLanguageChange={onLanguageChange}
-              onTranslate={() => {
-                onTranslate(index)
-                console.log('translating', selectedLanguage, message)
-              }}
-            />
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-5 h-full">
+            <p className="text-xl text-white">No messages yet. Start a conversation!</p>
           </div>
-        ))}
-        <div ref={messagesEndRef} />
+        ) : (
+          <>
+          {messages.map((message, index) => (
+            <div key={index} className="flex flex-col gap-4">
+              <MessageBubble
+                key={index}
+                message={message}
+              />
+              <ActionControls
+                message={message}
+                onSummarize={() => onSummarize(index)}
+                selectedLanguage={selectedLanguage}
+                isLoading={isLoading}
+                onLanguageChange={onLanguageChange}
+                onTranslate={() => {
+                  onTranslate(index)
+                  console.log('translating', selectedLanguage, message)
+                }}
+              />
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </>
+        )}
+
       </div>
       <form onSubmit={handleSubmit} className="p-4 border-t border-white/10">
         <div className="flex items-center">
