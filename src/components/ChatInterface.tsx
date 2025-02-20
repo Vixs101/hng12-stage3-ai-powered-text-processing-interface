@@ -55,7 +55,7 @@ export default function ChatInterface({
       dark:[&::-webkit-scrollbar-thumb]:bg-[#7B47FE]">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-5 h-full">
-            <p className="text-xl text-white">No messages yet. Start a conversation!</p>
+            <p className="text-xl text-white text-center">No input yet. Enter text below to see AI-powered summarization and translation!</p>
           </div>
         ) : (
           <>
