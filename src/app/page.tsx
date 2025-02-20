@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import ChatInterface from "@/components/ChatInterface"
 import { useErrorToast } from "@/hooks/useErrorToast"
 import { AISummarizerOptions } from "../../global"
@@ -12,6 +12,27 @@ export default function Home() {
   const [selectedLanguage, setSelectedLanguage] = useState("en")
   const toast = useErrorToast()
   const [isLoading, setIsLoading] = useState(false)
+
+  const isMobileDevice = (): boolean =>
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  // load messagesfrom local storage on mount.
+  useEffect(() => {
+      if (typeof window !== "undefined") {
+        const storedMessages = localStorage.getItem('messages');
+        if (storedMessages) {
+          setMessages(JSON.parse(storedMessages));
+        }
+      }
+    }, []);
+
+  // save messages to local storage when ever they change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem('messages', JSON.stringify(messages));
+    }
+  }, [messages])
+  
 
   const handleSendMessage = async (text: string) => {
     const newMessage = { text, language: null, summary: null, translation: null };
@@ -50,22 +71,29 @@ export default function Home() {
 
   // summarization
   const handleSummarize = async (index: number) => {
+    // Check for mobile devices
+    if (isMobileDevice()) {
+      toast.showError("Summarization is only available on desktop Chrome browsers");
+      return;
+    }
+  
     setIsLoading(true);
     const message = messages[index];
     if (!message) return;
-
+  
     const sourceLanguage = message.language;
     const options: AISummarizerOptions = {
       type: "key-points",
       length: "medium",
       format: "markdown",
     };
-
+  
     if (sourceLanguage !== "en") {
       toast.showError("The message is not in English, summarization is not supported for this language");
+      setIsLoading(false);
       return;
     }
-
+  
     if (
       typeof window !== "undefined" &&
       window.ai &&
@@ -73,16 +101,15 @@ export default function Home() {
       "create" in window.ai.summarizer
     ) {
       try {
-        // Check summarizer capabilities first.
         const capabilities = await window.ai.summarizer.capabilities();
         if (capabilities.available === "no") {
           toast.showError("Summarizer API is not available at the moment.");
+          setIsLoading(false);
           return;
         }
-
-        // Create the summarizer.
+  
         const summarizer = await window.ai.summarizer.create(options);
-
+  
         if (capabilities.available === "after-download") {
           summarizer.addEventListener("downloadprogress", (e: Event) => {
             const progressEvent = e as ProgressEvent;
@@ -90,15 +117,15 @@ export default function Home() {
           });
           await summarizer.ready;
         }
-
+  
         const summaryText = await summarizer.summarize(message.text);
-
+  
         setMessages(prevMessages => {
           const updated = [...prevMessages];
           updated[index] = { ...updated[index], summary: summaryText };
           return updated;
         });
-
+  
         summarizer.destroy?.();
       } catch (error) {
         console.error("Summarization error", error);
@@ -107,49 +134,58 @@ export default function Home() {
         setIsLoading(false);
       }
     } else {
-      console.error("Chrome Summarizer API not available");
       toast.showError("Chrome Summarizer API not available");
       setIsLoading(false);
     }
   };
-
+  
 
 
   const handleTranslate = async (index: number) => {
+    // Check for mobile devices
+    if (isMobileDevice()) {
+      toast.showError("Translation is only available on desktop Chrome browsers");
+      setIsLoading(false);
+      return;
+    }
+  
     setIsLoading(true);
     const message = messages[index];
     if (!message) return;
-
-    const sourceLanguage = message.language
-
-    console.log(window.ai)
-
+  
+    const sourceLanguage = message.language;
     if (!sourceLanguage) {
-      toast.showError("Unable to detect the source language,please refresh and try again")
-    }
-
-    if (sourceLanguage === selectedLanguage) {
-      toast.showError("The message is already thesame with the selected language");
+      toast.showError("Unable to detect the source language, please refresh and try again");
+      setIsLoading(false);
       return;
     }
-
-
-    if (typeof window !== "undefined" && window.ai && window.ai.translator && "create" in window.ai.translator) {
-
+  
+    if (sourceLanguage === selectedLanguage) {
+      toast.showError("The message is already in the selected language");
+      setIsLoading(false);
+      return;
+    }
+  
+    if (
+      typeof window !== "undefined" &&
+      window.ai &&
+      window.ai.translator &&
+      "create" in window.ai.translator
+    ) {
       try {
         const translator = await window.ai.translator.create({
-          sourceLanguage: "en",
+          sourceLanguage: sourceLanguage, // using the detected source language
           targetLanguage: selectedLanguage,
-
         });
-
+  
         const translation = await translator.translate(message.text);
-        console.log(translation)
+        console.log(translation);
         const updatedMessages = [...messages];
         updatedMessages[index] = { ...message, translation };
         setMessages(updatedMessages);
       } catch (error) {
         console.error("Translation error", error);
+        toast.showError("An error occurred during translation");
       } finally {
         setIsLoading(false);
       }
@@ -158,8 +194,8 @@ export default function Home() {
       toast.showError("Chrome Translator API not available");
       setIsLoading(false);
     }
-
   };
+  
 
 
   return (
