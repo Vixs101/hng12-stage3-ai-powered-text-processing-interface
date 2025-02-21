@@ -25,7 +25,7 @@ export default function MessageBubble({ message}: MessageBubbleProps) {
       <p className="mb-2 text-justify">{message.text}</p>
       {message.language && <p className="text-sm text-[#7B47FE] mb-2">Detected language: {LANGUAGE_NAMES[message.language] || message.language}</p>}
       {message.summary && (
-        <div className="mt-2 p-2 bg-white rounded">
+        <div className="mt-2 p-2 bg-white/5 backdrop-blur-sm rounded-md shadow-md text-justify border-[#7B47FE] border-2">
           <h4 className="font-bold text-sm mb-1">Summary:</h4>
           <p className="text-sm">{message.summary}</p>
         </div>
