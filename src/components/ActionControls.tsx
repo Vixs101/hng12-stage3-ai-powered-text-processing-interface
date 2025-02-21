@@ -33,7 +33,7 @@ export default function ActionControls({
 
   return (
     <div className="space-y-2 px-4 py-2 shadow-md rounded-lg bg-[#7B47FE]/10 backdrop-blur-sm">
-      <p className="text-sm text-white">Don&apos;t understand the above text? select a language to translate to. You can also use the summarize button to summarize the text.</p>
+      <p className="text-sm text-white">Don&apos;t understand the above text? select a language to translate to. {`${message.text.length > 150 ? "You can also use the summarize button to summarize the text" : ""}`}</p>
       <div className="flex items-center justify-between  md:min-w-3xl md:max-w-6xl">
         <select
           value={selectedLanguage}
